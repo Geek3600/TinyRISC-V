@@ -17,34 +17,38 @@
 `include "defines.v"
 
 // 将指令向译码模块传递
+// 主要作用：打一拍
 module if_id(
 
     input wire clk,
     input wire rst,
 
-    input wire[`InstBus] inst_i,            // 指令内容
-    input wire[`InstAddrBus] inst_addr_i,   // 指令地址
+    input wire[`InstBus] inst_i,            // 指令内容，此时已经从ROM将要执行的指令读出
+    input wire[`InstAddrBus] inst_addr_i,   // 指令地址，pc模块输出的指令地址
 
     input wire[`Hold_Flag_Bus] hold_flag_i, // 流水线暂停标志
 
     input wire[`INT_BUS] int_flag_i,        // 外设中断输入信号
     output wire[`INT_BUS] int_flag_o,
 
-    output wire[`InstBus] inst_o,           // 指令内容
-    output wire[`InstAddrBus] inst_addr_o   // 指令地址
+    output wire[`InstBus] inst_o,           // 指令内容，打一拍之后的输出指令
+    output wire[`InstAddrBus] inst_addr_o   // 指令地址，打一拍之后的输出指令地址
 
     );
 
     wire hold_en = (hold_flag_i >= `Hold_If);
 
+    // 指令打一拍
     wire[`InstBus] inst;
     gen_pipe_dff #(32) inst_ff(clk, rst, hold_en, `INST_NOP, inst_i, inst);
     assign inst_o = inst;
 
+    // 指令地址打一拍
     wire[`InstAddrBus] inst_addr;
     gen_pipe_dff #(32) inst_addr_ff(clk, rst, hold_en, `ZeroWord, inst_addr_i, inst_addr);
     assign inst_addr_o = inst_addr;
 
+    // 中断输入信号也打一拍
     wire[`INT_BUS] int_flag;
     gen_pipe_dff #(8) int_ff(clk, rst, hold_en, `INT_NONE, int_flag_i, int_flag);
     assign int_flag_o = int_flag;

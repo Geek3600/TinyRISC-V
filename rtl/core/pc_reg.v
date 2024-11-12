@@ -34,16 +34,22 @@ module pc_reg(
 
     always @ (posedge clk) begin
         // 复位
-        // 外部复位或者是jtag复位
+        // 外部复位或者是jtag引发的复位
         if (rst == `RstEnable || jtag_reset_flag_i == 1'b1) begin
             pc_o <= `CpuResetAddr;// 一个全0地址
+        
         // 跳转
+        // 如果跳转，则将输入的跳转目标地址作为pc值
         end else if (jump_flag_i == `JumpEnable) begin
             pc_o <= jump_addr_i;
+        
         // 暂停
+        // pc值保持不变
         end else if (hold_flag_i >= `Hold_Pc) begin
             pc_o <= pc_o;
+        
         // 地址加4
+        // 如果上面的情况都不满足，则顺序取指，pc值自增
         end else begin
             pc_o <= pc_o + 4'h4;
         end

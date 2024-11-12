@@ -32,9 +32,9 @@ module gen_pipe_dff #(
 
     always @ (posedge clk) begin
         if (!rst | hold_en) begin
-            qout_r <= def_val;
+            qout_r <= def_val; // 如果复位，就输出默认值
         end else begin
-            qout_r <= din;
+            qout_r <= din;  // 否则就将输入，输出
         end
     end
 
