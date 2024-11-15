@@ -128,7 +128,7 @@ module ex(
     assign sr_shift_mask = 32'hffffffff >> reg2_rdata_i[4:0];
     assign sri_shift_mask = 32'hffffffff >> inst_i[24:20];
 
-    assign op1_add_op2_res = op1_i + op2_i;
+    assign op1_add_op2_res = op1_i + op2_i; // 加法器，在这里完成加法操作
     assign op1_jump_add_op2_jump_res = op1_jump_i + op2_jump_i;
 
     assign reg1_data_invert = ~reg1_rdata_i + 1;
@@ -252,9 +252,9 @@ module ex(
         csr_wdata_o = `ZeroWord;
 
         case (opcode)
-            `INST_TYPE_I: begin
+            `INST_TYPE_I: begin // 立即数类型指令
                 case (funct3)
-                    `INST_ADDI: begin
+                    `INST_ADDI: begin // 加法操作
                         jump_flag = `JumpDisable;
                         hold_flag = `HoldDisable;
                         jump_addr = `ZeroWord;
@@ -274,7 +274,7 @@ module ex(
                         mem_we = `WriteDisable;
                         reg_wdata = {32{(~op1_ge_op2_signed)}} & 32'h1;
                     end
-                    `INST_SLTIU: begin
+                    `INST_SLTIU: begin // 有符号数比较
                         jump_flag = `JumpDisable;
                         hold_flag = `HoldDisable;
                         jump_addr = `ZeroWord;
@@ -284,7 +284,7 @@ module ex(
                         mem_we = `WriteDisable;
                         reg_wdata = {32{(~op1_ge_op2_unsigned)}} & 32'h1;
                     end
-                    `INST_XORI: begin
+                    `INST_XORI: begin // 无符号数比较
                         jump_flag = `JumpDisable;
                         hold_flag = `HoldDisable;
                         jump_addr = `ZeroWord;
@@ -294,7 +294,7 @@ module ex(
                         mem_we = `WriteDisable;
                         reg_wdata = op1_i ^ op2_i;
                     end
-                    `INST_ORI: begin
+                    `INST_ORI: begin // 立即数或
                         jump_flag = `JumpDisable;
                         hold_flag = `HoldDisable;
                         jump_addr = `ZeroWord;
@@ -304,7 +304,7 @@ module ex(
                         mem_we = `WriteDisable;
                         reg_wdata = op1_i | op2_i;
                     end
-                    `INST_ANDI: begin
+                    `INST_ANDI: begin // 立即数与
                         jump_flag = `JumpDisable;
                         hold_flag = `HoldDisable;
                         jump_addr = `ZeroWord;
@@ -314,7 +314,7 @@ module ex(
                         mem_we = `WriteDisable;
                         reg_wdata = op1_i & op2_i;
                     end
-                    `INST_SLLI: begin
+                    `INST_SLLI: begin // 立即数左移
                         jump_flag = `JumpDisable;
                         hold_flag = `HoldDisable;
                         jump_addr = `ZeroWord;
@@ -324,7 +324,7 @@ module ex(
                         mem_we = `WriteDisable;
                         reg_wdata = reg1_rdata_i << inst_i[24:20];
                     end
-                    `INST_SRI: begin
+                    `INST_SRI: begin // 立即数右移
                         jump_flag = `JumpDisable;
                         hold_flag = `HoldDisable;
                         jump_addr = `ZeroWord;
@@ -397,7 +397,7 @@ module ex(
                             mem_we = `WriteDisable;
                             reg_wdata = {32{(~op1_ge_op2_unsigned)}} & 32'h1;
                         end
-                        `INST_XOR: begin
+                        `INST_XOR: begin // 异或
                             jump_flag = `JumpDisable;
                             hold_flag = `HoldDisable;
                             jump_addr = `ZeroWord;
@@ -452,7 +452,7 @@ module ex(
                             reg_wdata = `ZeroWord;
                         end
                     endcase
-                end else if (funct7 == 7'b0000001) begin
+                end else if (funct7 == 7'b0000001) begin // 乘法操作
                     case (funct3)
                         `INST_MUL: begin
                             jump_flag = `JumpDisable;
@@ -582,7 +582,7 @@ module ex(
                         mem_waddr_o = `ZeroWord;
                         mem_we = `WriteDisable;
                         mem_req = `RIB_REQ;
-                        mem_raddr_o = op1_add_op2_res;
+                             = op1_add_op2_res;
                         reg_wdata = mem_rdata_i;
                     end
                     `INST_LBU: begin
@@ -638,15 +638,23 @@ module ex(
             end
             `INST_TYPE_S: begin
                 case (funct3)
-                    `INST_SB: begin
+                    `INST_SB: begin // 译码出SB指令
+                        
+                        // 将没有涉及的信号设置为默认值
                         jump_flag = `JumpDisable;
                         hold_flag = `HoldDisable;
                         jump_addr = `ZeroWord;
-                        reg_wdata = `ZeroWord;
+                        reg_wdata = `ZeroWord;  
+                        // 写内存使能
                         mem_we = `WriteEnable;
+                        // 发出访问内存请求
                         mem_req = `RIB_REQ;
+                        // 内存写地址
                         mem_waddr_o = op1_add_op2_res;
+                        // 内存读地址，写地址和读地址是一样的
                         mem_raddr_o = op1_add_op2_res;
+                        // mem_waddr_index的含义是写32位内存数据中的哪一个字节
+                        // SB指令只改变读出来的32位内存数据中对应的字节，其他位置你保持改变，然后写回内存中
                         case (mem_waddr_index)
                             2'b00: begin
                                 mem_wdata_o = {mem_rdata_i[31:8], reg2_rdata_i[7:0]};
@@ -700,7 +708,7 @@ module ex(
                     end
                 endcase
             end
-            `INST_TYPE_B: begin
+            `INST_TYPE_B: begin // 跳转指令
                 case (funct3)
                     `INST_BEQ: begin
                         hold_flag = `HoldDisable;

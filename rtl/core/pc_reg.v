@@ -27,7 +27,7 @@ module pc_reg(
     input wire[`Hold_Flag_Bus] hold_flag_i, // 流水线暂停标志，即pc值保持不变
     input wire jtag_reset_flag_i,           // 复位标志
 
-    output reg[`InstAddrBus] pc_o           // PC指针指
+    output reg[`InstAddrBus] pc_o           // PC指针
 
     );
 
